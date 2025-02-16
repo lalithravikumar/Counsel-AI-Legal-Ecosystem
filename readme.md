@@ -48,6 +48,7 @@ AWS_SECRET_KEY=your-aws-secret-key
 AWS_S3_BUCKET=your-s3-bucket
 AWS_COGNITO_USER_POOL_ID=your-cognito-pool-id
 ```
+embeddings.py is used to generate embeddings for a given folder with multiple pdf. Use it to modify the pre-defined embedding
 
 ## Usage
 ```sh
