@@ -14,19 +14,18 @@ import os
 import pickle
 import io
 from PyPDF2 import PdfReader
-# Streamlit page configuration
+
 st.set_page_config(page_title="Counsel AI", page_icon=r"C:\Users\bjlal\Documents\KMS J\KMS\data\lawSymbol.png")
 
-# AWS Cognito setup
+
 load_dotenv()
-AWS_REGION = "ap-southeast-2"  # Replace with your AWS region
+AWS_REGION = "ap-southeast-2"  
 USER_POOL_ID = os.getenv("USER_POOL_ID")
 CLIENT_ID = os.getenv("CLIENT_ID")
 S3_BUCKET = os.getenv("S3_BUCKET")
 cognito_client = boto3.client("cognito-idp", region_name=AWS_REGION)
 s3_client = boto3.client("s3", region_name=AWS_REGION)
 
-# User Authentication functions
 def register_user(username, password, email):
     try:
         response = cognito_client.sign_up(
@@ -68,7 +67,6 @@ def logout_user():
     st.session_state.clear()
     st.success("You have logged out successfully!")
 
-# Login/Register Interface
 def login_or_register():
     st.title("Login/Register")
     auth_option = st.selectbox("Choose an option", ["Login", "Register", "Verify Account"])
@@ -87,11 +85,9 @@ def login_or_register():
         if st.button("Verify"):
             confirm_user(username, verification_code)
 
-# Main Application
 def main_app():
     st.write(css, unsafe_allow_html=True)
 
-    # Sidebar Navigation
     st.sidebar.title("Navigation")
     nav_option = st.sidebar.radio("Go to", ["Chat with your Data", "Consult a Legal Expert", "File Manager"])
 
@@ -117,7 +113,6 @@ def main_app():
     elif nav_option == "File Manager":
         file_manager()
 
-    # Display logged in user and logout option
     st.sidebar.markdown("User Profile")
     st.sidebar.image("https://img.icons8.com/material-outlined/24/000000/user.png", use_column_width=False)
     st.sidebar.write(f"Logged in as: **{st.session_state.get('username')}**")
@@ -153,14 +148,13 @@ def handle_userinput(user_question):
         template = user_template if i % 2 == 0 else bot_template
         st.write(template.replace("{{MSG}}", message.content), unsafe_allow_html=True)
 
-# Legal Expert Consultation Page
 def legal_expert_page():
     if "conversation" not in st.session_state:
         st.session_state.conversation = None
     if "chat_history" not in st.session_state:
         st.session_state.chat_history = []
 
-    embeddings_file = "embeddings.pkl"  # Change this to your embeddings file path
+    embeddings_file = "embeddings.pkl"
     vectorstore = load_embeddings(embeddings_file)
     st.session_state.conversation = get_conversation_chain(vectorstore)
 
@@ -174,7 +168,6 @@ def load_embeddings(file_path):
         vectorstore = pickle.load(f)
     return vectorstore
 
-# File Manager Functionality
 def file_manager():
     st.header("File Manager")
     
@@ -208,14 +201,12 @@ def view_folder_contents(folder_name):
         st.write(file_key)
         if file_key.endswith('.pdf'):
             if st.button(f"Open PDF: {file_key}"):
-                # Fetch the PDF file from S3
                 file_obj = s3_client.get_object(Bucket=S3_BUCKET, Key=file_key)
                 
-                # Use BytesIO to read the file content
+              
                 pdf_bytes = io.BytesIO(file_obj['Body'].read())
-                pdf_reader = PdfReader(pdf_bytes)  # Initialize PdfReader with the BytesIO object
-                
-                # Assuming single-page for demo
+                pdf_reader = PdfReader(pdf_bytes) 
+       
                 if len(pdf_reader.pages) > 0:
                     pdf_text = pdf_reader.pages[0].extract_text()
                     st.text_area("PDF Content:", pdf_text, height=300)
@@ -239,7 +230,7 @@ def list_folders():
 
 def create_folder(folder_name):
     try:
-        s3_client.put_object(Bucket=S3_BUCKET, Key=(folder_name + '/'))  # Create an empty object with the folder name
+        s3_client.put_object(Bucket=S3_BUCKET, Key=(folder_name + '/')) 
         return True
     except ClientError as e:
         st.error(f"Could not create folder: {e}")
@@ -252,7 +243,6 @@ def upload_file(file, folder_name):
     except ClientError as e:
         st.error(f"Could not upload {file.name}: {e}")
 
-# Entry point for the application
 if __name__ == "__main__":
     if "logged_in" not in st.session_state:
         login_or_register()
